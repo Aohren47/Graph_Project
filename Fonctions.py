@@ -4,139 +4,168 @@ from collections import defaultdict, deque
 
 def lire_table(nom_fichier):
     """
-    Lit le fichier texte dont chaque ligne est de la forme :
-      numéro_tâche durée [prédécesseur1 prédécesseur2 ...]
-    Par exemple, la ligne "5 9 4 6 8" signifie que la tâche 5 (de durée 9)
-    a pour prédécesseurs les tâches 4, 6 et 8.
+    Lit le fichier de contraintes.
+    Chaque ligne doit être de la forme :
+       numéro_tâche durée [prédécesseur1 prédécesseur2 ...]
     Retourne :
-      - tasks : dictionnaire associant chaque tâche à sa durée
-      - pred_for_task : dictionnaire associant chaque tâche à la liste de ses prédécesseurs
-      - all_pred : ensemble de toutes les tâches qui interviennent comme prédécesseur
-      - N : numéro maximum de tâche
+       tasks : dictionnaire {numéro_tâche: durée}
+       pred_for_task : dictionnaire {numéro_tâche: liste des prédécesseurs}
     """
     tasks = {}
     pred_for_task = {}
-    all_pred = set()
-    N = 0
-    with open(nom_fichier, "r") as f:
-        for ligne in f:
-            ligne = ligne.strip()
-            if not ligne or ligne.startswith('#'):
-                continue
-            parts = ligne.split()
-            if len(parts) < 2:
-                print("Format invalide dans la ligne :", ligne)
-                continue
-            task_id = int(parts[0])
-            duration = float(parts[1])
-            tasks[task_id] = duration
-            N = max(N, task_id)
-            if len(parts) > 2:
-                preds = list(map(int, parts[2:]))
-                pred_for_task[task_id] = preds
-                for p in preds:
-                    all_pred.add(p)
-                    N = max(N, p)
-            else:
-                pred_for_task[task_id] = []
-    return tasks, pred_for_task, all_pred, N
+    try:
+        with open(nom_fichier, 'r') as f:
+            for ligne in f:
+                ligne = ligne.strip()
+                if ligne == '' or ligne.startswith('#'):
+                    continue
+                parts = ligne.split()
+                if len(parts) < 2:
+                    print("Format invalide dans la ligne :", ligne)
+                    continue
+                task = int(parts[0])
+                duration = float(parts[1])
+                tasks[task] = duration
+                if len(parts) > 2:
+                    preds = list(map(int, parts[2:]))
+                else:
+                    preds = []
+                pred_for_task[task] = preds
+    except Exception as e:
+        raise Exception(f"Erreur de lecture : {e}")
+    return tasks, pred_for_task
+
+
+def afficher_table_contraintes(tasks, pred_for_task):
+    print("\n--- Tableau de contraintes ---")
+    for task in sorted(tasks.keys()):
+        duration = tasks[task]
+        preds = pred_for_task.get(task, [])
+        print(f"Tâche {task} : durée = {duration}, prédécesseurs = {preds}")
 
 
 def construire_arcs(tasks, pred_for_task):
     """
-    Construit la liste des arcs à partir des contraintes.
-    Pour chaque tâche i possédant des prédécesseurs, on crée un arc de chaque prédécesseur p vers i,
-    avec pour poids la durée de p.
-    Retourne la liste d'arcs sous la forme (p, i, durée(p)).
+    Construit la liste des arcs issus des contraintes.
+    Pour chaque tâche i avec un prédécesseur p, crée l'arc (p, i) de poids = durée de p.
     """
     arcs = []
     for i, preds in pred_for_task.items():
-        if preds:
-            for p in preds:
-                if p in tasks:
-                    arcs.append((p, i, tasks[p]))
-                else:
-                    print(f"Attention : la tâche prédécesseur {p} n'est pas définie pour la tâche {i}.")
+        for p in preds:
+            if p in tasks:
+                arcs.append((p, i, tasks[p]))
+            else:
+                print(f"Attention : le prédécesseur {p} de la tâche {i} n'est pas défini.")
     return arcs
 
 
-def construire_matrice(arcs, tasks, pred_for_task, all_pred, N):
+def construire_graphe(tasks, pred_for_task, arcs):
     """
-    Construit la matrice d'adjacence du graphe, en intégrant deux nœuds fictifs :
-      - 0 pour le début,
-      - N+1 pour la fin.
-    La matrice est de taille (N+2)x(N+2) et est initialisée avec None pour indiquer l'absence d'arc,
-    et 0 sur la diagonale.
-    Les arcs sont ajoutés ainsi :
-      - Pour chaque arc (p, i, w) issu des contraintes, M[p][i] = w.
-      - Pour toute tâche sans prédécesseurs (liste vide dans pred_for_task), on ajoute un arc de 0 vers i de durée 0.
-      - Pour toute tâche qui n'est jamais utilisée comme prédécesseur (donc sans successeur), on ajoute un arc de i vers N+1 avec un poids égal à sa durée.
+    Construit la matrice d’adjacence du graphe d’ordonnancement.
+    On ajoute les deux nœuds fictifs : 0 (début) et N+1 (fin), où N est le maximum des tâches.
+    Pour chaque arc (p, i) issu des contraintes, la matrice M[p][i] prend la valeur = durée de p.
+    Pour chaque tâche sans prédécesseur, on ajoute un arc de 0 vers la tâche de poids 0.
+    Pour chaque tâche qui n'est jamais utilisée comme prédécesseur, on ajoute un arc vers N+1 de poids = durée de la tâche.
     """
-    taille = N + 2  # indices de 0 à N+1
-    M = [[None for _ in range(taille)] for _ in range(taille)]
-    for i in range(taille):
+    N = max(tasks.keys())
+    nb_sommets = N + 2  # de 0 à N+1
+    # Initialisation de la matrice avec None (absence d'arc) et 0 sur la diagonale
+    M = [[None for _ in range(nb_sommets)] for _ in range(nb_sommets)]
+    for i in range(nb_sommets):
         M[i][i] = 0
 
     # Ajout des arcs définis par les contraintes
-    succ_count = defaultdict(int)
     for (p, i, w) in arcs:
         M[p][i] = w
-        succ_count[p] += 1
 
-    # Ajout de l'arc fictif de départ : pour chaque tâche sans prédécesseurs, ajouter (0, i) de durée 0
+    # Ajout de l'arc fictif de départ : pour chaque tâche sans prédécesseur, ajouter (0, i) de durée 0
     for i in range(1, N + 1):
-        if i not in pred_for_task or (pred_for_task[i] == []):
+        if not pred_for_task.get(i):  # liste vide ou inexistante
             M[0][i] = 0
 
-    # Ajout de l'arc fictif de fin : pour chaque tâche qui n'est pas utilisée comme prédécesseur, ajouter (i, N+1) avec poids = durée de la tâche
+    # Ajout de l'arc fictif de fin : pour chaque tâche qui n'est pas utilisée comme prédécesseur
+    all_predecesseurs = set()
+    for preds in pred_for_task.values():
+        all_predecesseurs.update(preds)
     for i in range(1, N + 1):
-        if i not in all_pred:
+        if i not in all_predecesseurs:
             M[i][N + 1] = tasks[i]
 
     return M
 
 
+def afficher_graphe_arcs(M):
+    print("\n--- Création du graphe d'ordonnancement ---")
+    nb_sommets = len(M)
+    nb_arcs = 0
+    for i in range(nb_sommets):
+        for j in range(nb_sommets):
+            if i != j and M[i][j] is not None:
+                nb_arcs += 1
+    print(f"{nb_sommets} sommets")
+    print(f"{nb_arcs} arcs")
+    for i in range(nb_sommets):
+        for j in range(nb_sommets):
+            if i != j and M[i][j] is not None:
+                print(f"{i} -> {j} = {M[i][j]}")
+
+
 def afficher_matrice(M):
-    """
-    Affiche la matrice d'adjacence.
-    """
-    print("Matrice d'adjacence (None indique l'absence d'arc) :")
-    for ligne in M:
-        print(["{:.1f}".format(x) if x is not None else "None" for x in ligne])
+    nb_sommets = len(M)
+    header = "      " + " ".join([f"{j:>8}" for j in range(nb_sommets)])
+    print("\n--- Matrice des valeurs ---")
+    print(header)
+    for i in range(nb_sommets):
+        ligne = f"{i:>4}  " + " ".join([f"{('*' if val is None else f'{val:.1f}'):>8}" for val in M[i]])
+        print(ligne)
 
 
 def detection_circuit(M):
     """
-    Vérifie l'absence de circuit dans le graphe en effectuant un tri topologique.
-    Retourne un tuple (est_acyclique, ordre_topologique).
+    Vérifie l'absence de circuit avec l'algorithme de Kahn.
+    Affiche les étapes (points d'entrée et sommets restants) et retourne :
+       (True, ordre_topologique) si le graphe est acyclique,
+       (False, ordre_topologique_partiel) sinon.
     """
-    taille = len(M)
-    deg_ent = [0] * taille
-    for i in range(taille):
-        for j in range(taille):
+    nb_sommets = len(M)
+    indegree = [0] * nb_sommets
+    for i in range(nb_sommets):
+        for j in range(nb_sommets):
             if M[i][j] is not None and i != j:
-                deg_ent[j] += 1
+                indegree[j] += 1
 
-    file = deque([i for i in range(taille) if deg_ent[i] == 0])
-    ordre = []
-    while file:
-        u = file.popleft()
-        ordre.append(u)
-        for v in range(taille):
+    print("\n--- Détection de circuit ---")
+    entree = [i for i in range(nb_sommets) if indegree[i] == 0]
+    print("Points d'entrée initiaux :", entree)
+
+    queue = deque(entree)
+    topo_order = []
+    iteration = 1
+    while queue:
+        print(f"Iteration {iteration} - Points d'entrée :", list(queue))
+        u = queue.popleft()
+        topo_order.append(u)
+        for v in range(nb_sommets):
             if M[u][v] is not None and u != v:
-                deg_ent[v] -= 1
-                if deg_ent[v] == 0:
-                    file.append(v)
-    return (len(ordre) == taille), ordre
+                indegree[v] -= 1
+                if indegree[v] == 0:
+                    queue.append(v)
+        remaining = [i for i in range(nb_sommets) if indegree[i] > 0]
+        print("Sommets restants :", remaining if remaining else "Aucun")
+        iteration += 1
+
+    if len(topo_order) == nb_sommets:
+        print("-> Il n'y a pas de circuit")
+        return True, topo_order
+    else:
+        print("-> Il y a un circuit")
+        return False, topo_order
 
 
 def verification_arcs_positifs(M):
-    """
-    Vérifie que tous les arcs présents dans le graphe ont une valeur non négative.
-    """
-    taille = len(M)
-    for i in range(taille):
-        for j in range(taille):
+    nb_sommets = len(M)
+    for i in range(nb_sommets):
+        for j in range(nb_sommets):
             if M[i][j] is not None and M[i][j] < 0:
                 return False
     return True
@@ -144,32 +173,52 @@ def verification_arcs_positifs(M):
 
 def calcul_calendriers(M, topo):
     """
-    Calcule le calendrier au plus tôt (dates_min), le calendrier au plus tard (dates_max)
-    et les marges (dates_max - dates_min).
-    La date au plus tard du nœud final (N+1) est fixée égale à sa date au plus tôt.
+    Calcule :
+      - Le calendrier au plus tôt (dates_min)
+      - Le calendrier au plus tard (dates_max)
+      - Les marges (dates_max - dates_min)
+    Pour le calcul du calendrier au plus tard, on fixe la date au plus tard du nœud final égale à sa date au plus tôt.
     """
-    taille = len(M)
-    dates_min = [-float('inf')] * taille
+    nb_sommets = len(M)
+    # Calendrier au plus tôt
+    dates_min = [-float('inf')] * nb_sommets
     dates_min[0] = 0
     for u in topo:
-        for v in range(taille):
+        for v in range(nb_sommets):
             if M[u][v] is not None:
                 dates_min[v] = max(dates_min[v], dates_min[u] + M[u][v])
 
-    dates_max = [float('inf')] * taille
+    # Calendrier au plus tard (nœud final = dernière case)
+    dates_max = [float('inf')] * nb_sommets
     dates_max[-1] = dates_min[-1]
     for u in reversed(topo):
-        for v in range(taille):
+        for v in range(nb_sommets):
             if M[u][v] is not None:
                 dates_max[u] = min(dates_max[u], dates_max[v] - M[u][v])
-    marges = [dates_max[i] - dates_min[i] for i in range(taille)]
+
+    marges = [dates_max[i] - dates_min[i] for i in range(nb_sommets)]
     return dates_min, dates_max, marges
+
+
+def afficher_calendriers(dates_min, dates_max, marges):
+    print("\n--- Calendriers ---")
+    print("Calendrier au plus tôt (dates_min) :")
+    for i, d in enumerate(dates_min):
+        print(f"  Nœud {i} : {d}")
+    print("\nCalendrier au plus tard (dates_max) :")
+    for i, d in enumerate(dates_max):
+        print(f"  Nœud {i} : {d}")
+    print("\nMarges :")
+    for i, m in enumerate(marges):
+        print(f"  Nœud {i} : {m}")
 
 
 def trouver_chemins_critiques(M, dates_min, dates_max, chemin_actuel=[], noeud=0):
     """
-    Recherche récursive des chemins critiques dans le graphe.
-    Un chemin critique est une suite de nœuds dont la marge est nulle.
+    Recherche récursive des chemins critiques.
+    Un chemin critique est une suite de nœuds pour laquelle chaque arc (u,v) vérifie :
+         dates_min[u] + poids(u,v) == dates_min[v]
+    et le nœud v a une marge nulle (dates_max[v] - dates_min[v] == 0).
     """
     chemin_actuel = chemin_actuel + [noeud]
     if noeud == len(M) - 1:
@@ -177,54 +226,69 @@ def trouver_chemins_critiques(M, dates_min, dates_max, chemin_actuel=[], noeud=0
     chemins = []
     for v in range(len(M)):
         if M[noeud][v] is not None:
-            if dates_min[noeud] + M[noeud][v] == dates_min[v] and (dates_max[v] - dates_min[v] == 0):
+            # Vérification de la condition critique (tolérance numérique)
+            if abs(dates_min[noeud] + M[noeud][v] - dates_min[v]) < 1e-6 and abs(dates_max[v] - dates_min[v]) < 1e-6:
                 chemins.extend(trouver_chemins_critiques(M, dates_min, dates_max, chemin_actuel, v))
     return chemins
 
 
 def main():
-    # Nom du fichier contenant la table (assurez-vous que le fichier est dans le même répertoire ou indiquez le chemin complet)
-    nom_fichier = "table "+ input("Choisissez le nombre du fichier désiré : ") + ".txt"
-    try:
-        tasks, pred_for_task, all_pred, N = lire_table(nom_fichier)
-    except Exception as e:
-        print("Erreur lors de la lecture du fichier :", e)
-        sys.exit(1)
+    while True:
+        print("\n=== Ordonnancement ===")
+        nom_fichier = input("Entrez le nom du fichier de contraintes (ex: contraintes.txt) : ").strip()
+        try:
+            tasks, pred_for_task = lire_table(nom_fichier)
+        except Exception as e:
+            print("Erreur lors de la lecture du fichier :", e)
+            continue
 
-    arcs = construire_arcs(tasks, pred_for_task)
-    # Construction de la matrice d'adjacence avec les nœuds fictifs 0 et N+1
-    M = construire_matrice(arcs, tasks, pred_for_task, all_pred, N)
-    afficher_matrice(M)
+        # 1. Affichage du tableau de contraintes
+        afficher_table_contraintes(tasks, pred_for_task)
 
-    # Vérification des propriétés nécessaires du graphe
-    acyclique, topo = detection_circuit(M)
-    if not acyclique:
-        print("Erreur : le graphe contient un circuit.")
-        sys.exit(1)
-    if not verification_arcs_positifs(M):
-        print("Erreur : le graphe contient des arcs avec des valeurs négatives.")
-        sys.exit(1)
-    print("Le graphe est acyclique et tous les arcs ont des valeurs non négatives.")
+        # 2. Construction du graphe correspondant
+        arcs = construire_arcs(tasks, pred_for_task)
+        M = construire_graphe(tasks, pred_for_task, arcs)
+        afficher_graphe_arcs(M)
+        afficher_matrice(M)
 
-    # Calcul des calendriers
-    dates_min, dates_max, marges = calcul_calendriers(M, topo)
-    print("\nCalendrier au plus tôt (dates_min) :")
-    for i, d in enumerate(dates_min):
-        print(f"Nœud {i} : {d}")
+        # 3. Vérification des propriétés nécessaires du graphe
+        acyclique, topo = detection_circuit(M)
+        if not acyclique:
+            print("Le graphe contient un circuit. Veuillez choisir un autre tableau de contraintes.")
+            if input("Voulez-vous tester un autre tableau ? (o/n) : ").lower() != 'o':
+                break
+            else:
+                continue
 
-    print("\nCalendrier au plus tard (dates_max) :")
-    for i, d in enumerate(dates_max):
-        print(f"Nœud {i} : {d}")
+        if not verification_arcs_positifs(M):
+            print("Le graphe contient des arcs à valeur négative. Veuillez choisir un autre tableau de contraintes.")
+            if input("Voulez-vous tester un autre tableau ? (o/n) : ").lower() != 'o':
+                break
+            else:
+                continue
 
-    print("\nMarges :")
-    for i, m in enumerate(marges):
-        print(f"Nœud {i} : {m}")
+        print("\n-> Le graphe est un graphe d'ordonnancement valide.")
 
-    # Recherche et affichage des chemins critiques
-    chemins_critiques = trouver_chemins_critiques(M, dates_min, dates_max)
-    print("\nChemin(s) critique(s) :")
-    for chemin in chemins_critiques:
-        print(" -> ".join(map(str, chemin)))
+        # 4. Calcul des rangs (ordre topologique déjà obtenu via detection_circuit)
+        print("\nOrdre topologique (rangs des sommets) :", topo)
+
+        # 5. Calcul des calendriers et des marges
+        dates_min, dates_max, marges = calcul_calendriers(M, topo)
+        afficher_calendriers(dates_min, dates_max, marges)
+
+        # 6. Calcul du(s) chemin(s) critique(s)
+        chemins_critiques = trouver_chemins_critiques(M, dates_min, dates_max)
+        print("\n--- Chemin(s) critique(s) ---")
+        for chemin in chemins_critiques:
+            print(" -> ".join(map(str, chemin)))
+
+        # Durée totale du projet : date au plus tôt du nœud final
+        print("\nDurée totale du projet :", dates_min[-1])
+
+        # Proposition de tester un autre tableau de contraintes
+        if input("\nVoulez-vous tester un autre tableau de contraintes ? (o/n) : ").lower() != 'o':
+            print("Fin du programme.")
+            break
 
 
 if __name__ == "__main__":
