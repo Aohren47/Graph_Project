@@ -214,20 +214,17 @@ def afficher_calendriers(dates_min, dates_max, marges):
 
 
 def trouver_chemins_critiques(M, dates_min, dates_max, chemin_actuel=[], noeud=0):
-    """
-    Recherche récursive des chemins critiques.
-    Un chemin critique est une suite de nœuds pour laquelle chaque arc (u,v) vérifie :
-         dates_min[u] + poids(u,v) == dates_min[v]
-    et le nœud v a une marge nulle (dates_max[v] - dates_min[v] == 0).
-    """
     chemin_actuel = chemin_actuel + [noeud]
+
     if noeud == len(M) - 1:
         return [chemin_actuel]
+
     chemins = []
     for v in range(len(M)):
         if M[noeud][v] is not None:
-            # Vérification de la condition critique (tolérance numérique)
-            if abs(dates_min[noeud] + M[noeud][v] - dates_min[v]) < 1e-6 and abs(dates_max[v] - dates_min[v]) < 1e-6:
+            if (abs(dates_min[noeud] + M[noeud][v] - dates_min[v]) < 1e-6 and
+                    abs(dates_max[v] - dates_min[v]) < 1e-6 and
+                    v not in chemin_actuel):  # empêche les boucles infinies
                 chemins.extend(trouver_chemins_critiques(M, dates_min, dates_max, chemin_actuel, v))
     return chemins
 

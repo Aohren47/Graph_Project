@@ -25,8 +25,6 @@ def LectureTable(fichier):
     return taches, predecesseurs
 
 
-
-
 def TableauContrainte (taches, predecesseurs):
     print("  Tableau De Contrainte  ")
     for taches in sorted(taches.keys()):
@@ -45,6 +43,7 @@ def ConstruireArc(taches, predecesseurs):
             return arcs
 
 def GrapheEnMatrice():
+
 
 
 def DetectionCircuit(Matrice):
