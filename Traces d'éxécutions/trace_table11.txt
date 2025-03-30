@@ -1,0 +1,121 @@
+TABLE 11 :
+
+=== Ordonnancement ===
+Entrez le nom du fichier de contraintes (ex: contraintes.txt) : table 11.txt
+
+--- Tableau de contraintes ---
+Tâche 1 : durée = 1.0, prédécesseurs = []
+Tâche 2 : durée = 1.0, prédécesseurs = [1, 4]
+Tâche 3 : durée = 4.0, prédécesseurs = [2]
+Tâche 4 : durée = 2.0, prédécesseurs = [1, 5]
+Tâche 5 : durée = 5.0, prédécesseurs = [1]
+Tâche 6 : durée = 6.0, prédécesseurs = [4, 5]
+Tâche 7 : durée = 3.0, prédécesseurs = [3, 5]
+Tâche 8 : durée = 0.0, prédécesseurs = [2, 4, 6, 7]
+
+--- Création du graphe d'ordonnancement ---
+10 sommets
+16 arcs
+0 -> 1 = 0
+1 -> 2 = 1.0
+1 -> 4 = 1.0
+1 -> 5 = 1.0
+2 -> 3 = 1.0
+2 -> 8 = 1.0
+3 -> 7 = 4.0
+4 -> 2 = 2.0
+4 -> 6 = 2.0
+4 -> 8 = 2.0
+5 -> 4 = 5.0
+5 -> 6 = 5.0
+5 -> 7 = 5.0
+6 -> 8 = 6.0
+7 -> 8 = 3.0
+8 -> 9 = 0.0
+
+--- Matrice des valeurs ---
+             0        1        2        3        4        5        6        7        8        9
+   0       0.0      0.0        *        *        *        *        *        *        *        *
+   1         *      0.0      1.0        *      1.0      1.0        *        *        *        *
+   2         *        *      0.0      1.0        *        *        *        *      1.0        *
+   3         *        *        *      0.0        *        *        *      4.0        *        *
+   4         *        *      2.0        *      0.0        *      2.0        *      2.0        *
+   5         *        *        *        *      5.0      0.0      5.0      5.0        *        *
+   6         *        *        *        *        *        *      0.0        *      6.0        *
+   7         *        *        *        *        *        *        *      0.0      3.0        *
+   8         *        *        *        *        *        *        *        *      0.0      0.0
+   9         *        *        *        *        *        *        *        *        *      0.0
+
+--- Détection de circuit ---
+Points d'entrée initiaux : [0]
+Iteration 1 - Points d'entrée : [0]
+Sommets restants : [2, 3, 4, 5, 6, 7, 8, 9]
+Iteration 2 - Points d'entrée : [1]
+Sommets restants : [2, 3, 4, 6, 7, 8, 9]
+Iteration 3 - Points d'entrée : [5]
+Sommets restants : [2, 3, 6, 7, 8, 9]
+Iteration 4 - Points d'entrée : [4]
+Sommets restants : [3, 7, 8, 9]
+Iteration 5 - Points d'entrée : [2, 6]
+Sommets restants : [7, 8, 9]
+Iteration 6 - Points d'entrée : [6, 3]
+Sommets restants : [7, 8, 9]
+Iteration 7 - Points d'entrée : [3]
+Sommets restants : [8, 9]
+Iteration 8 - Points d'entrée : [7]
+Sommets restants : [9]
+Iteration 9 - Points d'entrée : [8]
+Sommets restants : Aucun
+Iteration 10 - Points d'entrée : [9]
+Sommets restants : Aucun
+-> Il n'y a pas de circuit
+
+-> Le graphe est un graphe d'ordonnancement valide.
+
+->Le graphe ne contient pas d'arcs à valeur négative
+
+->Le graphe ne contient pas de circuits
+
+Ordre topologique (rangs des sommets) : [0, 1, 5, 4, 2, 6, 3, 7, 8, 9]
+
+--- Calendriers ---
+Calendrier au plus tôt (dates_min) :
+  Nœud 0 : 0
+  Nœud 1 : 0
+  Nœud 2 : 8.0
+  Nœud 3 : 9.0
+  Nœud 4 : 6.0
+  Nœud 5 : 1.0
+  Nœud 6 : 8.0
+  Nœud 7 : 13.0
+  Nœud 8 : 16.0
+  Nœud 9 : 16.0
+
+Calendrier au plus tard (dates_max) :
+  Nœud 0 : 0.0
+  Nœud 1 : 0.0
+  Nœud 2 : 8.0
+  Nœud 3 : 9.0
+  Nœud 4 : 6.0
+  Nœud 5 : 1.0
+  Nœud 6 : 10.0
+  Nœud 7 : 13.0
+  Nœud 8 : 16.0
+  Nœud 9 : 16.0
+
+Marges :
+  Nœud 0 : 0.0
+  Nœud 1 : 0.0
+  Nœud 2 : 0.0
+  Nœud 3 : 0.0
+  Nœud 4 : 0.0
+  Nœud 5 : 0.0
+  Nœud 6 : 2.0
+  Nœud 7 : 0.0
+  Nœud 8 : 0.0
+  Nœud 9 : 0.0
+
+--- Chemin(s) critique(s) ---
+0 -> 1 -> 5 -> 4 -> 2 -> 3 -> 7 -> 8 -> 9
+
+Durée totale du projet : 16.0
