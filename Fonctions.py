@@ -265,6 +265,8 @@ def main():
                 continue
 
         print("\n-> Le graphe est un graphe d'ordonnancement valide.")
+        print("\n->Le graphe ne contient pas d'arcs à valeur négative")
+        print("\n->Le graphe ne contient pas de circuits")
 
         # 4. Calcul des rangs (ordre topologique déjà obtenu via detection_circuit)
         print("\nOrdre topologique (rangs des sommets) :", topo)
