@@ -1,0 +1,73 @@
+TABLE 1 :
+=== Ordonnancement ===
+Entrez le nom du fichier de contraintes (ex: contraintes.txt) : table 1.txt
+
+--- Tableau de contraintes ---
+Tâche 1 : durée = 2.0, prédécesseurs = []
+Tâche 2 : durée = 5.0, prédécesseurs = []
+Tâche 3 : durée = 4.0, prédécesseurs = [1]
+Tâche 4 : durée = 2.0, prédécesseurs = [2, 3, 13]
+Tâche 5 : durée = 5.0, prédécesseurs = [4]
+Tâche 6 : durée = 5.0, prédécesseurs = [5]
+Tâche 7 : durée = 9.0, prédécesseurs = [6]
+Tâche 8 : durée = 2.0, prédécesseurs = [7]
+Tâche 9 : durée = 5.0, prédécesseurs = [8]
+Tâche 10 : durée = 1.0, prédécesseurs = [11]
+Tâche 11 : durée = 1.0, prédécesseurs = [4]
+Tâche 12 : durée = 1.0, prédécesseurs = [3]
+Tâche 13 : durée = 9.0, prédécesseurs = [6, 12]
+
+--- Création du graphe d'ordonnancement ---
+15 sommets
+18 arcs
+0 -> 1 = 0
+0 -> 2 = 0
+1 -> 3 = 2.0
+2 -> 4 = 5.0
+3 -> 4 = 4.0
+3 -> 12 = 4.0
+4 -> 5 = 2.0
+4 -> 11 = 2.0
+5 -> 6 = 5.0
+6 -> 7 = 5.0
+6 -> 13 = 5.0
+7 -> 8 = 9.0
+8 -> 9 = 2.0
+9 -> 14 = 5.0
+10 -> 14 = 1.0
+11 -> 10 = 1.0
+12 -> 13 = 1.0
+13 -> 4 = 9.0
+
+--- Matrice des valeurs ---
+             0        1        2        3        4        5        6        7        8        9       10       11       12       13       14
+   0       0.0      0.0      0.0        *        *        *        *        *        *        *        *        *        *        *        *
+   1         *      0.0        *      2.0        *        *        *        *        *        *        *        *        *        *        *
+   2         *        *      0.0        *      5.0        *        *        *        *        *        *        *        *        *        *
+   3         *        *        *      0.0      4.0        *        *        *        *        *        *        *      4.0        *        *
+   4         *        *        *        *      0.0      2.0        *        *        *        *        *      2.0        *        *        *
+   5         *        *        *        *        *      0.0      5.0        *        *        *        *        *        *        *        *
+   6         *        *        *        *        *        *      0.0      5.0        *        *        *        *        *      5.0        *
+   7         *        *        *        *        *        *        *      0.0      9.0        *        *        *        *        *        *
+   8         *        *        *        *        *        *        *        *      0.0      2.0        *        *        *        *        *
+   9         *        *        *        *        *        *        *        *        *      0.0        *        *        *        *      5.0
+  10         *        *        *        *        *        *        *        *        *        *      0.0        *        *        *      1.0
+  11         *        *        *        *        *        *        *        *        *        *      1.0      0.0        *        *        *
+  12         *        *        *        *        *        *        *        *        *        *        *        *      0.0      1.0        *
+  13         *        *        *        *      9.0        *        *        *        *        *        *        *        *      0.0        *
+  14         *        *        *        *        *        *        *        *        *        *        *        *        *        *      0.0
+
+--- Détection de circuit ---
+Points d'entrée initiaux : [0]
+Iteration 1 - Points d'entrée : [0]
+Sommets restants : [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+Iteration 2 - Points d'entrée : [1, 2]
+Sommets restants : [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+Iteration 3 - Points d'entrée : [2, 3]
+Sommets restants : [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+Iteration 4 - Points d'entrée : [3]
+Sommets restants : [4, 5, 6, 7, 8, 9, 10, 11, 13, 14]
+Iteration 5 - Points d'entrée : [12]
+Sommets restants : [4, 5, 6, 7, 8, 9, 10, 11, 13, 14]
+-> Il y a un circuit
+Le graphe contient un circuit. Veuillez choisir un autre tableau de contraintes.

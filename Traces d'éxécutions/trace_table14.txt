@@ -1,0 +1,85 @@
+TABLE 14 :
+
+=== Ordonnancement ===
+Entrez le nom du fichier de contraintes (ex: contraintes.txt) : table 14.txt
+
+--- Tableau de contraintes ---
+Tâche 1 : durée = 3.0, prédécesseurs = []
+Tâche 2 : durée = 2.0, prédécesseurs = []
+Tâche 3 : durée = 4.0, prédécesseurs = [1, 2, 4]
+Tâche 4 : durée = 1.0, prédécesseurs = [2]
+
+--- Création du graphe d'ordonnancement ---
+6 sommets
+7 arcs
+0 -> 1 = 0
+0 -> 2 = 0
+1 -> 3 = 3.0
+2 -> 3 = 2.0
+2 -> 4 = 2.0
+3 -> 5 = 4.0
+4 -> 3 = 1.0
+
+--- Matrice des valeurs ---
+             0        1        2        3        4        5
+   0       0.0      0.0      0.0        *        *        *
+   1         *      0.0        *      3.0        *        *
+   2         *        *      0.0      2.0      2.0        *
+   3         *        *        *      0.0        *      4.0
+   4         *        *        *      1.0      0.0        *
+   5         *        *        *        *        *      0.0
+
+--- Détection de circuit ---
+Points d'entrée initiaux : [0]
+Iteration 1 - Points d'entrée : [0]
+Sommets restants : [3, 4, 5]
+Iteration 2 - Points d'entrée : [1, 2]
+Sommets restants : [3, 4, 5]
+Iteration 3 - Points d'entrée : [2]
+Sommets restants : [3, 5]
+Iteration 4 - Points d'entrée : [4]
+Sommets restants : [5]
+Iteration 5 - Points d'entrée : [3]
+Sommets restants : Aucun
+Iteration 6 - Points d'entrée : [5]
+Sommets restants : Aucun
+-> Il n'y a pas de circuit
+
+-> Le graphe est un graphe d'ordonnancement valide.
+
+->Le graphe ne contient pas d'arcs à valeur négative
+
+->Le graphe ne contient pas de circuits
+
+Ordre topologique (rangs des sommets) : [0, 1, 2, 4, 3, 5]
+
+--- Calendriers ---
+Calendrier au plus tôt (dates_min) :
+  Nœud 0 : 0
+  Nœud 1 : 0
+  Nœud 2 : 0
+  Nœud 3 : 3.0
+  Nœud 4 : 2.0
+  Nœud 5 : 7.0
+
+Calendrier au plus tard (dates_max) :
+  Nœud 0 : 0.0
+  Nœud 1 : 0.0
+  Nœud 2 : 0.0
+  Nœud 3 : 3.0
+  Nœud 4 : 2.0
+  Nœud 5 : 7.0
+
+Marges :
+  Nœud 0 : 0.0
+  Nœud 1 : 0.0
+  Nœud 2 : 0.0
+  Nœud 3 : 0.0
+  Nœud 4 : 0.0
+  Nœud 5 : 0.0
+
+--- Chemin(s) critique(s) ---
+0 -> 1 -> 3 -> 5
+0 -> 2 -> 4 -> 3 -> 5
+
+Durée totale du projet : 7.0
